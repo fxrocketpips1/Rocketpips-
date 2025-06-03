@@ -2,3 +2,6 @@ requests
 python-telegram-bot
 ta
 pandas
+flask
+requests
+twelvedata
