@@ -1,5 +1,3 @@
-# main.py
-
 from flask import Flask
 import threading
 import time
@@ -22,50 +20,42 @@ def send_telegram_message(message):
         "chat_id": TELEGRAM_CHAT_ID,
         "text": message
     }
-    requests.post(url, data=payload)
+    try:
+        requests.post(url, data=payload)
+    except Exception as e:
+        print(f"Telegram error: {e}")
 
 # ========== SIGNAL GENERATION LOGIC ==========
 
 def generate_signal():
-    """
-    Placeholder for your real signal logic.
-    Currently just sends a timestamp every 5 minutes.
-    """
     current_time = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
     signal = f"Signal generated at {current_time} for {SYMBOL}"
     send_telegram_message(signal)
 
-# ========== BACKGROUND BOT LOOP ==========
+# ========== BACKGROUND THREAD ==========
 
 def run_bot():
     while True:
         try:
             generate_signal()
-            time.sleep(60 * 5)  # Run every 5 minutes
+            time.sleep(60 * 5)  # Every 5 minutes
         except Exception as e:
             send_telegram_message(f"Bot error: {e}")
             time.sleep(60)
 
-# ========== LAUNCH BACKGROUND THREAD ==========
-
-@app.before_first_request
-def activate_bot():
+def start_background_thread():
     thread = threading.Thread(target=run_bot)
     thread.daemon = True
     thread.start()
 
-# ========== HOME ROUTE ==========
+# ========== ROUTES ==========
 
 @app.route("/")
 def home():
     return "Forex Signal Bot is Running ✅"
 
-# ========== START SERVER ==========
+# ========== SERVER ==========
 
 if __name__ == "__main__":
+    start_background_thread()
     app.run(host="0.0.0.0", port=10000)
-import os
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
